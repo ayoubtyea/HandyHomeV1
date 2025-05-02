@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import Home from './pages/Home';
 import Services from './pages/Services';
 import About from './pages/About';
@@ -9,22 +9,29 @@ import BecomeTasker from './pages/BecomeTasker';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import './index.css';
+import ServiceDetailsPage from './pages/ServiceDetailsPage';
+import TaskerDetailsPage from './pages/TaskerDetailsPage';
 
 function App() {
+  const location = useLocation();
+  const isAuthPage = location.pathname === '/auth';
+
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar />
+      {!isAuthPage && <Navbar />}
       <main className="flex-grow">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/services" element={<Services />} />
+          <Route path="/services/:id" element={<ServiceDetailsPage />} />
+          <Route path="/taskers/:id" element={<TaskerDetailsPage />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/become-tasker" element={<BecomeTasker />} />
         </Routes>
       </main>
-      <Footer />
+      {!isAuthPage && <Footer />}
     </div>
   );
 }

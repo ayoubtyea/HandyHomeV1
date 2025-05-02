@@ -73,7 +73,7 @@ export default function About() {
               transition={{ duration: 0.5 }}
             >
               <h2 className="text-xl font-light">
-                Contact Us
+              About Us
               </h2>
             </motion.div>
 

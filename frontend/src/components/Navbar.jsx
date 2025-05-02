@@ -79,8 +79,9 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-[#F2EADD] md:rounded-full mt-4 mx-auto max-w-7xl">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
+  <div>
+<nav className="bg-[#F2EADD] md:rounded-full mt-4 mx-auto w-full max-w-screen-2xl px-4">
+      <div className="w-full mx-auto px-2 sm:px-4 lg:px-6 py-4 flex justify-between items-center">
         <Link to="/" className="flex items-center">
           <img src="https://i.postimg.cc/C5dQgh9H/MAIN-1.png" alt="Handy Home" className="h-8" />
         </Link>
@@ -217,7 +218,10 @@ const Navbar = () => {
         </div>
       </div>
     </nav>
-  );
+  </div> 
+   
+  )
+  ;
 };
 
 export default Navbar;
