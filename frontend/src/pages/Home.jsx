@@ -447,23 +447,6 @@ export default function HeroSection() {
   ))}
 </div>
 
-{/* View All Services Button */}
-<div className="flex justify-center mt-12 md:mt-16">
-  <motion.div
-    initial={{ opacity: 0, y: 50 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.5 }}
-  >
-    <Link
-      to="/services"
-      className="inline-flex items-center px-6 py-3 md:px-8 md:py-4 border-2 border-[#076870] text-[#076870] rounded-full text-base md:text-lg hover:bg-[#076870] hover:text-white transition-all duration-300 hover:shadow-md"
-    >
-      View All Services
-      {/* ... icon ... */}
-    </Link>
-  </motion.div>
-</div>
-
     {/* View All Services Button */}
     <div className="flex justify-center mt-12 md:mt-16">
       <motion.div

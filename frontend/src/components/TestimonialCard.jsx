@@ -1,4 +1,4 @@
-import React,  { useState }  from 'react'
+import React, { useState } from 'react';
 
 export default function TestimonialCard() {
   const testimonials = [
@@ -44,7 +44,7 @@ export default function TestimonialCard() {
 
   return (
     <section className="bg-white mt-12 py-16">
-      <div className="max-w-6xl 2xl:max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
           {/* Left Column */}
           <div className="text-center md:text-left">
@@ -59,15 +59,64 @@ export default function TestimonialCard() {
               Here's what some of our valued clients have to say about their
               experience with HandyHome.
             </p>
-            <div className="flex gap-6 mt-6">
+          </div>
+
+          {/* Right Column */}
+          <div className="bg-white rounded-xl overflow-hidden mt-2">
+            <div className="relative px-4 py-6">
+              {/* Left Quote Icon */}
+              <div className="absolute top-0 left-0 text-[#076870] text-4xl opacity-30">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
+                </svg>
+              </div>
+
+              {/* Testimonial Content */}
+              <div className="flex justify-center">
+                <div className="w-full max-w-2xl">
+                  <div className="flex flex-col lg:flex-row items-center transition-all duration-700 ease-in-out">
+                    {/* Image */}
+                    <div className="w-full lg:w-1/3 flex justify-center mb-4 lg:mb-0">
+                      <img
+                        src={testimonials[currentIndex].image}
+                        alt={testimonials[currentIndex].name}
+                        className="rounded-full shadow-lg w-36 h-36 object-cover"
+                      />
+                    </div>
+
+                    {/* Testimonial Text */}
+                    <div className="w-full lg:w-2/3 lg:text-left text-center px-4">
+                      <h4 className="text-xl font-semibold mb-4">
+                        {testimonials[currentIndex].name} -{" "}
+                        <span className="font-normal text-gray-600">{testimonials[currentIndex].role}</span>
+                      </h4>
+                      <p className="text-gray-600 mb-4 text-lg">
+                        "{testimonials[currentIndex].quote}"
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Quote Icon */}
+              <div className="absolute bottom-0 right-0 text-[#076870] text-4xl opacity-30">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M9.983 3v7.391c0 5.704-3.731 9.57-8.983 10.609l-.995-2.151c2.432-.917 3.995-3.638 3.995-5.849h-4v-10h9.983zm14.017 0v7.391c0 5.704-3.748 9.57-9 10.609l-.996-2.151c2.433-.917 3.996-3.638 3.996-5.849h-3.983v-10h9.983z" />
+                </svg>
+              </div>
+            </div>
+
+            {/* Navigation Buttons */}
+            <div className="flex justify-center gap-6 mt-2 mb-4">
               {/* Left Arrow */}
               <button
                 onClick={prevTestimonial}
                 className="flex items-center justify-center w-12 h-12 bg-[#076870] text-white rounded-full shadow-md hover:bg-[#065f57] cursor-pointer transition duration-300 ease-in-out transform hover:scale-110"
+                aria-label="Previous testimonial"
               >
                 <svg
                   fill="none"
-                  className="w-6 h-6 transform rotate-180"
+                  className="w-6 h-6"
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -84,6 +133,7 @@ export default function TestimonialCard() {
               <button
                 onClick={nextTestimonial}
                 className="flex items-center justify-center w-12 h-12 bg-[#076870] text-white rounded-full shadow-md hover:bg-[#065f57] cursor-pointer transition duration-300 ease-in-out transform hover:scale-110"
+                aria-label="Next testimonial"
               >
                 <svg
                   fill="none"
@@ -102,50 +152,6 @@ export default function TestimonialCard() {
               </button>
             </div>
           </div>
-
-          {/* Right Column */}
-          <div className="bg-white  rounded-xl overflow-hidden mt-2">
-          <div className="max-w-7xl mx-auto">
-  {/* Left Quote Icon */}
-        <div className="absolute  transform -translate-y-1/2 text-[#076870] text-4xl">
-            <i className="fas fa-quote-left"></i>
-        </div>
-
-  {/* Testimonial Content */}
-  <div className="flex justify-center px-4">
-    <div className="w-full max-w-2xl">
-      <div className="flex flex-col lg:flex-row items-center transition-all duration-700 ease-in-out">
-        {/* Image */}
-        <div className="w-full lg:w-1/3 flex justify-center mb-4 lg:mb-0">
-          <img
-            src={testimonials[currentIndex].image}
-            alt={testimonials[currentIndex].name}
-            className="rounded-full shadow-lg w-36 h-36 object-cover"
-          />
-        </div>
-
-        {/* Testimonial Text */}
-        <div className="w-full lg:w-2/3 lg:text-left text-center">
-          <h4 className="text-xl font-semibold mb-4">
-            {testimonials[currentIndex].name} -{" "}
-            {testimonials[currentIndex].role}
-          </h4>
-          <p className="text-gray-600 mb-4 text-lg">
-            "{testimonials[currentIndex].quote}"
-          </p>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  {/* Right Quote Icon */}
-  <div className="absolute right-13 transform -translate-y-1/2 text-[#076870] text-4xl hidden ">
-    <i className="fas fa-quote-right"></i>
-  </div>
-</div>
-
-</div>
-
         </div>
       </div>
     </section>
