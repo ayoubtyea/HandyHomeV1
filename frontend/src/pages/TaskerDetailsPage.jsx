@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { motion } from 'framer-motion';
 import ReadyToJoin from '../components/ReadyToJoin';
+import { Link } from 'react-router-dom';
 
 // Icons for skills
 const SkillIcons = {
@@ -387,9 +388,12 @@ const TaskerDetailsPage = () => {
                     </div>
 
                     {/* View Profile Button */}
-                    <button className="mt-4 px-4 py-2 bg-[#076870] text-white rounded-full hover:bg-[#065f57] transition duration-300 cursor-pointer">
-                      View Profile
-                    </button>
+                    <Link 
+  to={`/tasker-details/${tasker.id}`}
+  className="mt-4 px-4 py-2 bg-[#076870] text-white rounded-full hover:bg-[#065f57] transition duration-300 cursor-pointer block"
+>
+  View Profile
+</Link>
                   </div>
                 ))}
               </div>

@@ -21,6 +21,7 @@ const ServicesPage = () => {
     {
       id: 1,
       name: 'Electrical Problems',
+      type: 'service', // Add this field
       description: 'From simple repairs to complete rewiring projects, our electrical solutions are designed to keep your home safe.',
       image: 'https://cdn.prod.website-files.com/6641b18a77a92d76b329c2d5/6641b50e3a30a5d77c8578a8_electrical-problems.jpg'
     },
