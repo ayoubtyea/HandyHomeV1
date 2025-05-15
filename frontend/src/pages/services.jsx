@@ -1,8 +1,7 @@
-import { useState } from "react";
+import React from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import ReadyToJoin from "../components/ReadyToJoin";
 
 

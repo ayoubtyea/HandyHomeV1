@@ -109,7 +109,7 @@ const Navbar = () => {
         {/* Desktop Menu */}
         <div className="hidden md:flex items-center space-x-8 font-poppins flex-grow justify-center">
           <Link to="/" className="text-gray-700 hover:text-[#076870] transition-colors duration-300">Home</Link>
-          <Link to="/services" className="text-gray-700 hover:text-[#076870] transition-colors duration-300">Services</Link>
+          <Link to="/Services" className="text-gray-700 hover:text-[#076870] transition-colors duration-300">Services</Link>
           <Link to="/about" className="text-gray-700 hover:text-[#076870] transition-colors duration-300">About Us</Link>
           <Link to="/contact" className="text-gray-700 hover:text-[#076870] transition-colors duration-300">Contact Us</Link>
         </div>

@@ -3,8 +3,7 @@ import { Link } from "react-router-dom";
 import Testimonial from "../components/TestimonialCard";
 import Contact from "../components/Contact";
 import ReadyToJoin from "../components/ReadyToJoin";
-import Navbar from "../components/Navbar";
-import Footer from '../components/Footer';
+
 
 export default function HeroSection() {
   const servicesData = [
@@ -59,27 +58,31 @@ export default function HeroSection() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
             {/* Left Side: Hero Content */}
             <motion.div
-              className="text-center md:text-left"
-              initial={{ opacity: 0, y: 70 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-            >
-              <h1 className="text-4xl sm:text-5xl md:text-6xl font-light text-gray-900">
-                <span className="block font-black">Home</span> Solutions with{" "}
-                <span className="bg-[url('https://i.postimg.cc/4dPVjTJQ/modified-image-v3.png')] text-white inline-block font-extrabold px-4 py-1 rounded-lg rotate-[-5deg] border-l-black">
-                  HandyHome
-                </span>
-              </h1>
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-              >
-                <p className="text-gray-600 mt-4 text-base sm:text-lg">
-                  Home Solutions with HandyHome offers a comprehensive range of expert
-                  services designed to streamline & elevate your home living experience.
-                </p>
-              </motion.div>
+  className="text-center md:text-left"
+  initial={{ opacity: 0, y: 70 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.6 }}
+>
+  <h1 className="text-4xl sm:text-5xl md:text-6xl font-light text-gray-900">
+    <span className="inline-block font-black">Home Solutions</span>
+  </h1>
+  <h1 className="text-4xl sm:text-5xl md:text-6xl font-light text-gray-900 flex items-center mt-1">
+    <span>with</span>
+    <span className="bg-[url('https://i.postimg.cc/4dPVjTJQ/modified-image-v3.png')] text-white ml-2 font-extrabold px-4 py-1 rounded-lg rotate-[-5deg] border-l-black">
+      HandyHome
+    </span>
+  </h1>
+  
+  <motion.div
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    transition={{ delay: 0.3 }}
+  >
+    <p className="text-gray-600 mt-4 text-base sm:text-lg">
+      Home Solutions with HandyHome offers a comprehensive range of expert
+      services designed to streamline & elevate your home living experience.
+    </p>
+  </motion.div>
 
               {/* CTA Button */}
               <motion.div
