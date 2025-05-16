@@ -1,5 +1,6 @@
+// Updated App.jsx with fixed imports
 import React from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import Home from './pages/Home';
 import ServicesPage from './pages/Services';
 import About from './pages/About';
@@ -12,20 +13,71 @@ import './index.css';
 import ServiceDetailsPage from './pages/ServiceDetailsPage';
 import TaskerDetailsPage from './pages/TaskerDetailsPage';
 import NotFound from './pages/NotFound';
-import { AuthProvider } from './contexts/AuthContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext'; // Make sure this path is correct
 import ProtectedRoute from './components/ProtectedRoute';
 import BookingPage from './pages/BookingPage';
+
+// Dashboard Layout
+import DashboardLayout from './layouts/dashboard/DashboardLayout';
+
+// Admin Dashboard
+import AdminDashboard from './pages/dashboard/admin/AdminDashboard';
+import Bookings from './pages/dashboard/admin/Bookings';
+import Reviews from './pages/dashboard/admin/Reviews';
+
+// Client Dashboard
+import ClientDashboard from './pages/dashboard/client/ClientDashboard';
+import ClientBookings from './pages/dashboard/client/ClientBookings';
+import ClientProfile from './pages/dashboard/client/ClientProfile';
+import ClientReviews from './pages/dashboard/client/ClientReviews';
+
+// Provider Dashboard
+import ProviderDashboard from './pages/dashboard/provider/ProviderDashboard';
+import ProviderProfile from './pages/dashboard/provider/ProviderProfile';
+import ProviderSettings from './pages/dashboard/provider/ProviderSettings';
+
+// Dashboard router that redirects to the appropriate dashboard based on user role
+const DashboardRouter = () => {
+  const { user, isAuthenticated } = useAuth();
+  
+  if (!isAuthenticated) {
+    // Not authenticated, redirect to login
+    return <Navigate to="/auth" replace />;
+  }
+
+  // Redirect based on role
+  switch (user.role?.toLowerCase()) {
+    case 'admin':
+      return <Navigate to="/admin-dashboard" replace />;
+    case 'provider':
+      return <Navigate to="/provider-dashboard" replace />;
+    case 'client':
+      return <Navigate to="/client-dashboard" replace />;
+    default:
+      // If role is not recognized, redirect to home
+      return <Navigate to="/" replace />;
+  }
+};
 
 function App() {
   const location = useLocation();
   const isAuthPage = location.pathname === '/auth';
+  
+  // Check if the current path is a dashboard path
+  const isDashboardPath = 
+    location.pathname.startsWith('/admin-dashboard') || 
+    location.pathname.startsWith('/provider-dashboard') || 
+    location.pathname.startsWith('/client-dashboard');
 
   return (
     <AuthProvider>
       <div className="min-h-screen flex flex-col">
-        {!isAuthPage && <Navbar />}
-        <main className="flex-grow">
+        {/* Only show Navbar on non-auth pages and non-dashboard pages */}
+        {!isAuthPage && !isDashboardPath && <Navbar />}
+        
+        <main className={`flex-grow ${isDashboardPath ? 'bg-gray-100' : ''}`}>
           <Routes>
+            {/* Public routes */}
             <Route path="/" element={<Home />} />
             <Route path="/services" element={<ServicesPage />} />
             <Route path="/service-details/:id" element={<ServiceDetailsPage />} />
@@ -35,21 +87,99 @@ function App() {
             <Route path="/auth" element={<Auth />} />
             <Route path="/become-tasker" element={<BecomeTasker />} />
             
-            {/* Protected routes */}
-            <Route 
-              path="/book/:id" 
-              element={
-                <ProtectedRoute>
-                  <BookingPage />
-                </ProtectedRoute>
-              } 
-            />
+            {/* Dashboard router - redirects to the appropriate dashboard */}
+            <Route path="/dashboard" element={<DashboardRouter />} />
+            
+            {/* Admin Dashboard Routes */}
+            <Route path="/admin-dashboard" element={
+              <ProtectedRoute requiredRole="admin">
+                <DashboardLayout>
+                  <AdminDashboard />
+                </DashboardLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/admin-dashboard/bookings" element={
+              <ProtectedRoute requiredRole="admin">
+                <DashboardLayout>
+                  <Bookings />
+                </DashboardLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/admin-dashboard/reviews" element={
+              <ProtectedRoute requiredRole="admin">
+                <DashboardLayout>
+                  <Reviews />
+                </DashboardLayout>
+              </ProtectedRoute>
+            } />
+            
+            {/* Client Dashboard Routes */}
+            <Route path="/client-dashboard" element={
+              <ProtectedRoute requiredRole="client">
+                <DashboardLayout>
+                  <ClientDashboard />
+                </DashboardLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/client-dashboard/bookings" element={
+              <ProtectedRoute requiredRole="client">
+                <DashboardLayout>
+                  <ClientBookings />
+                </DashboardLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/client-dashboard/profile" element={
+              <ProtectedRoute requiredRole="client">
+                <DashboardLayout>
+                  <ClientProfile />
+                </DashboardLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/client-dashboard/reviews" element={
+              <ProtectedRoute requiredRole="client">
+                <DashboardLayout>
+                  <ClientReviews />
+                </DashboardLayout>
+              </ProtectedRoute>
+            } />
+            
+            {/* Provider Dashboard Routes */}
+            <Route path="/provider-dashboard" element={
+              <ProtectedRoute requiredRole="provider">
+                <DashboardLayout>
+                  <ProviderDashboard />
+                </DashboardLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/provider-dashboard/profile" element={
+              <ProtectedRoute requiredRole="provider">
+                <DashboardLayout>
+                  <ProviderProfile />
+                </DashboardLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/provider-dashboard/settings" element={
+              <ProtectedRoute requiredRole="provider">
+                <DashboardLayout>
+                  <ProviderSettings />
+                </DashboardLayout>
+              </ProtectedRoute>
+            } />
+            
+            {/* Protected booking route */}
+            <Route path="/book/:id" element={
+              <ProtectedRoute>
+                <BookingPage />
+              </ProtectedRoute>
+            } />
             
             {/* 404 route */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
-        {!isAuthPage && <Footer />}
+        
+        {/* Only show Footer on non-auth pages and non-dashboard pages */}
+        {!isAuthPage && !isDashboardPath && <Footer />}
       </div>
     </AuthProvider>
   );
