@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
-import { useNavigate } from "react-router-dom";
-
-const API_URL = `${import.meta.env.VITE_API_URL}/auth`;
+import { useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 
 const AuthPage = () => {
+  const { login, signup, forgotPassword, resetPassword, error: authError } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
@@ -28,6 +27,7 @@ const AuthPage = () => {
 
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Check for reset token in URL
   useEffect(() => {
@@ -39,6 +39,13 @@ const AuthPage = () => {
       setShowForm(true);
     }
   }, []);
+
+  // Set error from auth context
+  useEffect(() => {
+    if (authError) {
+      setError(authError);
+    }
+  }, [authError]);
 
   const handleButtonClick = (isLoginForm) => {
     setIsLogin(isLoginForm);
@@ -111,58 +118,39 @@ const AuthPage = () => {
   // Handle the form submit logic
   const handleFormSubmit = async (e) => {
     e.preventDefault();
+    if (!validateForm()) return;
+    
     setIsLoading(true);
     setError("");
   
     try {
-      let endpoint = "/login"; // Default endpoint for login
-      let payload = {
-        email: formData.email.trim(),
-        password: formData.password.trim(),
-      };
-  
-      if (!isLogin) {
+      if (isLogin) {
+        // Login logic
+        await login(formData.email.trim(), formData.password.trim());
+        // Redirect to home page or redirect URL from state
+        const redirectTo = location.state?.from || '/';
+        navigate(redirectTo);
+      } else {
         // Signup logic
-        endpoint = formData.role === "admin"
-          ? "/admin/signup"
-          : formData.role === "provider"
-          ? "/provider/signup"
-          : "/client/signup";
-  
-        payload = {
-          ...formData,
+        const userData = {
+          fullName: formData.fullName.trim(),
+          email: formData.email.trim(),
+          phoneNumber: formData.phoneNumber.trim(),
           password: formData.password.trim(),
+          role: isAdminLogin ? 'admin' : formData.role
         };
+
+        await signup(userData);
+        navigate('/');
       }
-  
-      const response = await axios.post(`${API_URL}${endpoint}`, payload, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-  
-      if (!response.data.success) {
-        throw new Error(response.data.message || "Authentication failed");
-      }
-  
-      // Store auth token and user data in localStorage
-      localStorage.setItem("authToken", response.data.token);
-      localStorage.setItem("userData", JSON.stringify(response.data.user));
-  
-      // Redirect to homepage
-      navigate("/"); // Redirect to the homepage after signup
-  
-    } catch (error) {
-      console.error("Error during form submission:", error);
-      setError(error.response?.data?.message || error.message || "Authentication failed");
+    } catch (err) {
+      console.error("Error during form submission:", err);
+      setError(err.response?.data?.message || err.message || "Authentication failed");
     } finally {
       setIsLoading(false);
     }
   };
   
-  
-  
-
   const handleForgotPasswordSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -175,28 +163,26 @@ const AuthPage = () => {
           return;
         }
         
-        await axios.post(`${API_URL}/forgot-password`, { email: forgotPasswordEmail });
+        await forgotPassword(forgotPasswordEmail);
         alert('Email Sent Successfully');
       } else {
         if (newPassword !== confirmNewPassword) {
           setError("Passwords don't match");
+          setIsLoading(false);
           return;
         }
         if (newPassword.length < 6) {
           setError("Password must be at least 6 characters");
+          setIsLoading(false);
           return;
         }
 
-        const response = await axios.post(`${API_URL}/reset-password/${resetToken}`, { 
-          password: newPassword 
-        });
-
-        localStorage.setItem("authToken", response.data.token);
-        localStorage.setItem("userData", JSON.stringify(response.data.user));
+        await resetPassword(resetToken, newPassword);
         setResetSuccess(true);
         
+        // Redirect after a short delay
         setTimeout(() => {
-          window.location.href = "/";
+          navigate('/');
         }, 2000);
       }
     } catch (err) {
@@ -398,6 +384,22 @@ const AuthPage = () => {
                     required
                     minLength="6"
                   />
+                </div>
+              )}
+
+              {/* Role selector for registration */}
+              {!isLogin && !isAdminLogin && (
+                <div className="relative">
+                  <label className="block text-sm text-gray-600 mb-1">Register as:</label>
+                  <select
+                    name="role"
+                    value={formData.role}
+                    onChange={handleChange}
+                    className="w-full p-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#076870]"
+                  >
+                    <option value="client">Client</option>
+                    <option value="provider">Service Provider</option>
+                  </select>
                 </div>
               )}
 
