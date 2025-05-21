@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { FiHome, FiCalendar, FiUser, FiSettings, FiBell, FiHelpCircle, FiLogOut, FiFileText, FiMenu, FiSearch, FiUsers,FiDollarSign,FiStar, FiClock, FiTool, FiMapPin, FiMessageCircle, } from 'react-icons/fi';
-import { useAuth } from '../../../src/context/AuthContext';
+import {useAuth } from '../../contexts/AuthContext'; // Make sure this path is correct
 import { Outlet } from 'react-router-dom';
 
 const DashboardLayout = ({ userAvatar = '' }) => {

@@ -13,7 +13,7 @@ import './index.css';
 import ServiceDetailsPage from './pages/ServiceDetailsPage';
 import TaskerDetailsPage from './pages/TaskerDetailsPage';
 import NotFound from './pages/NotFound';
-import { AuthProvider, useAuth } from './contexts/AuthContext'; // Make sure this path is correct
+import { AuthProvider, useAuth } from './contexts/AuthContext'; 
 import ProtectedRoute from './components/ProtectedRoute';
 import BookingPage from './pages/BookingPage';
 
