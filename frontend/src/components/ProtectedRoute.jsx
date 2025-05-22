@@ -1,4 +1,3 @@
-// components/ProtectedRoute.jsx
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -22,9 +21,9 @@ const ProtectedRoute = ({ children, requiredRole }) => {
   }
 
   // If a role is required and user doesn't have it, redirect to appropriate dashboard
-  if (requiredRole && user.role?.toLowerCase() !== requiredRole.toLowerCase()) {
+  if (requiredRole && user?.role?.toLowerCase() !== requiredRole.toLowerCase()) {
     // Redirect to the appropriate dashboard based on their role
-    switch (user.role?.toLowerCase()) {
+    switch (user?.role?.toLowerCase()) {
       case 'admin':
         return <Navigate to="/admin-dashboard" replace />;
       case 'provider':

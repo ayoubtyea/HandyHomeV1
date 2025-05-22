@@ -1,4 +1,3 @@
-// Updated App.jsx with fixed imports
 import React from 'react';
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import Home from './pages/Home';
@@ -13,7 +12,7 @@ import './index.css';
 import ServiceDetailsPage from './pages/ServiceDetailsPage';
 import TaskerDetailsPage from './pages/TaskerDetailsPage';
 import NotFound from './pages/NotFound';
-import { AuthProvider, useAuth } from './contexts/AuthContext'; 
+import { useAuth } from './contexts/AuthContext'; 
 import ProtectedRoute from './components/ProtectedRoute';
 import BookingPage from './pages/BookingPage';
 
@@ -38,7 +37,16 @@ import ProviderSettings from './pages/dashboard/provider/ProviderSettings';
 
 // Dashboard router that redirects to the appropriate dashboard based on user role
 const DashboardRouter = () => {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
+  
+  // Show loading while checking auth
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#076870]"></div>
+      </div>
+    );
+  }
   
   if (!isAuthenticated) {
     // Not authenticated, redirect to login
@@ -46,7 +54,7 @@ const DashboardRouter = () => {
   }
 
   // Redirect based on role
-  switch (user.role?.toLowerCase()) {
+  switch (user?.role?.toLowerCase()) {
     case 'admin':
       return <Navigate to="/admin-dashboard" replace />;
     case 'provider':
@@ -70,118 +78,116 @@ function App() {
     location.pathname.startsWith('/client-dashboard');
 
   return (
-    <AuthProvider>
-      <div className="min-h-screen flex flex-col">
-        {/* Only show Navbar on non-auth pages and non-dashboard pages */}
-        {!isAuthPage && !isDashboardPath && <Navbar />}
-        
-        <main className={`flex-grow ${isDashboardPath ? 'bg-gray-100' : ''}`}>
-          <Routes>
-            {/* Public routes */}
-            <Route path="/" element={<Home />} />
-            <Route path="/services" element={<ServicesPage />} />
-            <Route path="/service-details/:id" element={<ServiceDetailsPage />} />
-            <Route path="/taskers/:id" element={<TaskerDetailsPage />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/become-tasker" element={<BecomeTasker />} />
-            
-            {/* Dashboard router - redirects to the appropriate dashboard */}
-            <Route path="/dashboard" element={<DashboardRouter />} />
-            
-            {/* Admin Dashboard Routes */}
-            <Route path="/admin-dashboard" element={
-              <ProtectedRoute requiredRole="admin">
-                <DashboardLayout>
-                  <AdminDashboard />
-                </DashboardLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/admin-dashboard/bookings" element={
-              <ProtectedRoute requiredRole="admin">
-                <DashboardLayout>
-                  <Bookings />
-                </DashboardLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/admin-dashboard/reviews" element={
-              <ProtectedRoute requiredRole="admin">
-                <DashboardLayout>
-                  <Reviews />
-                </DashboardLayout>
-              </ProtectedRoute>
-            } />
-            
-            {/* Client Dashboard Routes */}
-            <Route path="/client-dashboard" element={
-              <ProtectedRoute requiredRole="client">
-                <DashboardLayout>
-                  <ClientDashboard />
-                </DashboardLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/client-dashboard/bookings" element={
-              <ProtectedRoute requiredRole="client">
-                <DashboardLayout>
-                  <ClientBookings />
-                </DashboardLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/client-dashboard/profile" element={
-              <ProtectedRoute requiredRole="client">
-                <DashboardLayout>
-                  <ClientProfile />
-                </DashboardLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/client-dashboard/reviews" element={
-              <ProtectedRoute requiredRole="client">
-                <DashboardLayout>
-                  <ClientReviews />
-                </DashboardLayout>
-              </ProtectedRoute>
-            } />
-            
-            {/* Provider Dashboard Routes */}
-            <Route path="/provider-dashboard" element={
-              <ProtectedRoute requiredRole="provider">
-                <DashboardLayout>
-                  <ProviderDashboard />
-                </DashboardLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/provider-dashboard/profile" element={
-              <ProtectedRoute requiredRole="provider">
-                <DashboardLayout>
-                  <ProviderProfile />
-                </DashboardLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/provider-dashboard/settings" element={
-              <ProtectedRoute requiredRole="provider">
-                <DashboardLayout>
-                  <ProviderSettings />
-                </DashboardLayout>
-              </ProtectedRoute>
-            } />
-            
-            {/* Protected booking route */}
-            <Route path="/book/:id" element={
-              <ProtectedRoute>
-                <BookingPage />
-              </ProtectedRoute>
-            } />
-            
-            {/* 404 route */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </main>
-        
-        {/* Only show Footer on non-auth pages and non-dashboard pages */}
-        {!isAuthPage && !isDashboardPath && <Footer />}
-      </div>
-    </AuthProvider>
+    <div className="min-h-screen flex flex-col">
+      {/* Only show Navbar on non-auth pages and non-dashboard pages */}
+      {!isAuthPage && !isDashboardPath && <Navbar />}
+      
+      <main className={`flex-grow ${isDashboardPath ? 'bg-gray-100' : ''}`}>
+        <Routes>
+          {/* Public routes */}
+          <Route path="/" element={<Home />} />
+          <Route path="/services" element={<ServicesPage />} />
+          <Route path="/service-details/:id" element={<ServiceDetailsPage />} />
+          <Route path="/taskers/:id" element={<TaskerDetailsPage />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/become-tasker" element={<BecomeTasker />} />
+          
+          {/* Dashboard router - redirects to the appropriate dashboard */}
+          <Route path="/dashboard" element={<DashboardRouter />} />
+          
+          {/* Admin Dashboard Routes */}
+          <Route path="/admin-dashboard" element={
+            <ProtectedRoute requiredRole="admin">
+              <DashboardLayout>
+                <AdminDashboard />
+              </DashboardLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/admin-dashboard/bookings" element={
+            <ProtectedRoute requiredRole="admin">
+              <DashboardLayout>
+                <Bookings />
+              </DashboardLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/admin-dashboard/reviews" element={
+            <ProtectedRoute requiredRole="admin">
+              <DashboardLayout>
+                <Reviews />
+              </DashboardLayout>
+            </ProtectedRoute>
+          } />
+          
+          {/* Client Dashboard Routes */}
+          <Route path="/client-dashboard" element={
+            <ProtectedRoute requiredRole="client">
+              <DashboardLayout>
+                <ClientDashboard />
+              </DashboardLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/client-dashboard/bookings" element={
+            <ProtectedRoute requiredRole="client">
+              <DashboardLayout>
+                <ClientBookings />
+              </DashboardLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/client-dashboard/profile" element={
+            <ProtectedRoute requiredRole="client">
+              <DashboardLayout>
+                <ClientProfile />
+              </DashboardLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/client-dashboard/reviews" element={
+            <ProtectedRoute requiredRole="client">
+              <DashboardLayout>
+                <ClientReviews />
+              </DashboardLayout>
+            </ProtectedRoute>
+          } />
+          
+          {/* Provider Dashboard Routes */}
+          <Route path="/provider-dashboard" element={
+            <ProtectedRoute requiredRole="provider">
+              <DashboardLayout>
+                <ProviderDashboard />
+              </DashboardLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/provider-dashboard/profile" element={
+            <ProtectedRoute requiredRole="provider">
+              <DashboardLayout>
+                <ProviderProfile />
+              </DashboardLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/provider-dashboard/settings" element={
+            <ProtectedRoute requiredRole="provider">
+              <DashboardLayout>
+                <ProviderSettings />
+              </DashboardLayout>
+            </ProtectedRoute>
+          } />
+          
+          {/* Protected booking route */}
+          <Route path="/book/:id" element={
+            <ProtectedRoute>
+              <BookingPage />
+            </ProtectedRoute>
+          } />
+          
+          {/* 404 route */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </main>
+      
+      {/* Only show Footer on non-auth pages and non-dashboard pages */}
+      {!isAuthPage && !isDashboardPath && <Footer />}
+    </div>
   );
 }
 
