@@ -135,7 +135,7 @@ const Navbar = () => {
             <>
               <Link to="/become-tasker">
                 <button className="relative overflow-hidden py-2.5 px-5 text-sm font-medium text-gray-900 bg-white rounded-full border border-gray-200 focus:outline-none focus:ring-4 focus:ring-gray-100 transition-all duration-300 hover:bg-[#076870] hover:text-white cursor-pointer">
-                  Become a Tasker
+                  Become a Provider
                 </button>
               </Link>
               <Link to="/auth">
