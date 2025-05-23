@@ -1,29 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { FiHome, FiCalendar, FiUser, FiSettings, FiBell, FiHelpCircle, FiLogOut, FiFileText, FiMenu, FiSearch, FiUsers,FiDollarSign,FiStar, FiClock, FiTool, FiMapPin, FiMessageCircle, } from 'react-icons/fi';
-import {useAuth } from '../../contexts/AuthContext'; // Make sure this path is correct
-import { Outlet } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 
-const DashboardLayout = ({ userAvatar = '' }) => {
+const DashboardLayout = ({ children, userAvatar = '' }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true); 
   const [activePath, setActivePath] = useState('');
   const [searchQuery, setSearchQuery] = useState(''); 
-  const [userRole, setUserRole] = useState('client'); 
   const location = useLocation();
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
 
   // Set active path when location changes
   useEffect(() => {
     setActivePath(location.pathname);
   }, [location]);
-
-  // Set user role from localStorage
-  useEffect(() => {
-    const userData = JSON.parse(localStorage.getItem('userData'));
-    const role = userData?.role || 'client';  
-    setUserRole(role);
-  }, []);
 
   // Define nav items based on user role
   const clientNavItems = [
@@ -39,9 +30,9 @@ const DashboardLayout = ({ userAvatar = '' }) => {
     { name: 'My Bookings', icon: <FiCalendar />, path: '/provider-dashboard/bookings' },
     { name: "My Messages", icon: <FiMessageCircle />, path: '/provider-dashboard/messages', badge: 3 },
     { name: 'Notifications', icon: <FiBell />, path: '/provider-dashboard/notifications', badge: 5 },
-    { name: 'Profile & Settings', icon: <FiUser />, path: '/provider-dashboard/Settings' },
-    {name: 'Manage Services', icon: <FiTool />, path: '/provider-dashboard/manage-services'},
-    {name: 'help & support', icon: <FiHelpCircle />, path: '/provider-dashboard/help'},
+    { name: 'Profile & Settings', icon: <FiUser />, path: '/provider-dashboard/profile' },
+    { name: 'Manage Services', icon: <FiTool />, path: '/provider-dashboard/manage-services'},
+    { name: 'help & support', icon: <FiHelpCircle />, path: '/provider-dashboard/help'},
   ];
 
   const adminNavItems = [
@@ -54,6 +45,7 @@ const DashboardLayout = ({ userAvatar = '' }) => {
     { name: 'Settings', icon: <FiSettings />, path: '/admin-dashboard/settings' },
   ];
 
+  const userRole = user?.role?.toLowerCase() || 'client';
   const navItems = userRole === 'admin' ? adminNavItems :
                    userRole === 'provider' ? providerNavItems :
                    clientNavItems;
@@ -78,7 +70,8 @@ const DashboardLayout = ({ userAvatar = '' }) => {
 
   // Navigate directly to notifications page
   const handleNotificationsClick = () => {
-    navigate('/client-dashboard/notifications');
+    const role = userRole;
+    navigate(`/${role}-dashboard/notifications`);
   };
 
   return (
@@ -155,7 +148,7 @@ const DashboardLayout = ({ userAvatar = '' }) => {
 
             <div className="relative">
               <img
-                src={userAvatar || "https://www.w3schools.com/w3images/avatar2.png"} 
+                src={userAvatar || user?.profilePhoto || "https://www.w3schools.com/w3images/avatar2.png"} 
                 alt="Profile"
                 className="w-8 h-8 rounded-full border-2 border-white"
               />
@@ -165,7 +158,7 @@ const DashboardLayout = ({ userAvatar = '' }) => {
 
         {/* Scrollable Content */}
         <main className="flex-1 overflow-auto p-4 md:p-6 bg-gray-50">
-          <Outlet />
+          {children}
         </main>
       </div>
     </div>

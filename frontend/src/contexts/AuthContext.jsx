@@ -7,15 +7,13 @@ const AuthContext = createContext();
 // API configuration
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-console.log('API_BASE_URL:', API_BASE_URL); // Debug log
-
 // Axios instance for auth
 const authAPI = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json'
   },
-  timeout: 10000 // 10 seconds timeout
+  timeout: 10000
 });
 
 // Add authorization header to every request if token exists
@@ -25,11 +23,9 @@ authAPI.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    console.log('Making request to:', config.url, 'with data:', config.data);
     return config;
   },
   (error) => {
-    console.error('Request interceptor error:', error);
     return Promise.reject(error);
   }
 );
@@ -37,13 +33,11 @@ authAPI.interceptors.request.use(
 // Handle responses and errors
 authAPI.interceptors.response.use(
   (response) => {
-    console.log('Response received:', response.data);
     return response;
   },
   (error) => {
-    console.error('Response error:', error);
     if (error.response?.status === 401) {
-      // Token expired or invalid
+      // Token expired or invalid - clear auth data
       localStorage.removeItem('authToken');
       localStorage.removeItem('userData');
     }
@@ -64,14 +58,30 @@ export const AuthProvider = ({ children }) => {
         const token = localStorage.getItem('authToken');
         const userData = localStorage.getItem('userData');
         
-        console.log('Loading user - Token exists:', !!token, 'UserData exists:', !!userData);
-        
         if (token && userData) {
           try {
             const parsedUser = JSON.parse(userData);
             setUser(parsedUser);
             setIsAuthenticated(true);
-            console.log('User loaded from localStorage:', parsedUser);
+            
+            // Verify token is still valid by making a test request
+            try {
+              const response = await authAPI.get('/auth/me');
+              if (response.data.success) {
+                // Update user data with latest from server
+                const updatedUser = response.data.user;
+                setUser(updatedUser);
+                localStorage.setItem('userData', JSON.stringify(updatedUser));
+              }
+            } catch (error) {
+              // Token is invalid, clear auth data
+              if (error.response?.status === 401) {
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('userData');
+                setUser(null);
+                setIsAuthenticated(false);
+              }
+            }
           } catch (parseError) {
             console.error('Error parsing user data:', parseError);
             logout();
@@ -94,7 +104,6 @@ export const AuthProvider = ({ children }) => {
       console.log('Attempting login with:', credentials);
       
       const response = await authAPI.post('/auth/login', credentials);
-      console.log('Login response:', response.data);
       
       if (!response.data || !response.data.success) {
         throw new Error(response.data?.message || 'Login failed');
@@ -109,11 +118,14 @@ export const AuthProvider = ({ children }) => {
       setIsAuthenticated(true);
       
       console.log('Login successful, user set:', response.data.user);
+      
+      // Dispatch storage event for other components (like Navbar)
+      window.dispatchEvent(new Event('storage'));
+      
       return response.data;
     } catch (error) {
       console.error('Login error:', error);
       
-      // Create a more detailed error message
       let errorMessage = 'Login failed';
       if (error.response) {
         errorMessage = error.response.data?.message || `Server error: ${error.response.status}`;
@@ -127,24 +139,18 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Register function
+  // Register function - Only for clients
   const register = async (userData) => {
     try {
       console.log('Attempting registration with:', userData);
       
-      let endpoint = '/auth/client/signup';
+      // Only allow client registration through public signup
+      const registrationData = {
+        ...userData,
+        role: 'client' // Force client role for public signup
+      };
       
-      // Determine endpoint based on role
-      if (userData.role === 'provider') {
-        endpoint = '/auth/provider/signup';
-      } else if (userData.role === 'admin') {
-        endpoint = '/auth/admin/signup';
-      }
-      
-      console.log('Using endpoint:', endpoint);
-      
-      const response = await authAPI.post(endpoint, userData);
-      console.log('Registration response:', response.data);
+      const response = await authAPI.post('/auth/signup', registrationData);
       
       if (!response.data || !response.data.success) {
         throw new Error(response.data?.message || 'Registration failed');
@@ -159,11 +165,14 @@ export const AuthProvider = ({ children }) => {
       setIsAuthenticated(true);
       
       console.log('Registration successful, user set:', response.data.user);
+      
+      // Dispatch storage event for other components
+      window.dispatchEvent(new Event('storage'));
+      
       return response.data;
     } catch (error) {
       console.error('Registration error:', error);
       
-      // Create a more detailed error message
       let errorMessage = 'Registration failed';
       if (error.response) {
         errorMessage = error.response.data?.message || `Server error: ${error.response.status}`;
@@ -191,6 +200,10 @@ export const AuthProvider = ({ children }) => {
       localStorage.removeItem('userData');
       setUser(null);
       setIsAuthenticated(false);
+      
+      // Dispatch storage event for other components
+      window.dispatchEvent(new Event('storage'));
+      
       console.log('User logged out successfully');
     }
   };
@@ -199,6 +212,10 @@ export const AuthProvider = ({ children }) => {
   const updateUser = (updatedUser) => {
     setUser(updatedUser);
     localStorage.setItem('userData', JSON.stringify(updatedUser));
+    
+    // Dispatch storage event for other components
+    window.dispatchEvent(new Event('storage'));
+    
     console.log('User updated:', updatedUser);
   };
 

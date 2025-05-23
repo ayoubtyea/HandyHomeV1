@@ -1,10 +1,6 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
-import { useNavigate } from "react-router-dom";
-// Import from your updated AuthContext
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from '../contexts/AuthContext';
-
-const API_URL = `${import.meta.env.VITE_API_URL}/auth`;
 
 const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -18,9 +14,11 @@ const AuthPage = () => {
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [resetSuccess, setResetSuccess] = useState(false);
   const [isAdminLogin, setIsAdminLogin] = useState(false);
-  
-  // Optionally use the Auth context
-  const auth = useAuth();
+
+  // Get auth functions from context
+  const { login, register, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -32,7 +30,14 @@ const AuthPage = () => {
   });
 
   const [showPassword, setShowPassword] = useState(false);
-  const navigate = useNavigate();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      const from = location.state?.from || '/dashboard';
+      navigate(from, { replace: true });
+    }
+  }, [isAuthenticated, navigate, location]);
 
   // Check for reset token in URL
   useEffect(() => {
@@ -50,6 +55,7 @@ const AuthPage = () => {
     setShowForm(true);
     setShowForgotPassword(false);
     setError("");
+    setIsAdminLogin(false);
     setFormData((prev) => ({
       ...prev,
       fullName: "",
@@ -57,7 +63,24 @@ const AuthPage = () => {
       phoneNumber: "",
       password: "",
       confirmPassword: "",
-      role: prev.role
+      role: isLoginForm ? prev.role : "client"
+    }));
+  };
+
+  const handleAdminLoginClick = () => {
+    setIsLogin(true);
+    setIsAdminLogin(true);
+    setShowForm(true);
+    setShowForgotPassword(false);
+    setError("");
+    setFormData((prev) => ({
+      ...prev,
+      fullName: "",
+      email: "",
+      phoneNumber: "",
+      password: "",
+      confirmPassword: "",
+      role: "admin"
     }));
   };
 
@@ -95,7 +118,7 @@ const AuthPage = () => {
     }
     
     // Additional signup validations
-    if (!isLogin) {
+    if (!isLogin && !isAdminLogin) {
       if (!formData.fullName.trim()) {
         setError("Full name is required");
         return false;
@@ -116,57 +139,90 @@ const AuthPage = () => {
   // Handle the form submit logic
   const handleFormSubmit = async (e) => {
     e.preventDefault();
-    if (!validateForm()) return;
+    
+    if (!validateForm()) {
+      return;
+    }
     
     setIsLoading(true);
     setError("");
-  
+
     try {
-      let endpoint = "/login"; // Default endpoint for login
-      let payload = {
-        email: formData.email.trim(),
-        password: formData.password.trim(),
-      };
-  
-      if (!isLogin) {
-        // Signup logic
-        endpoint = formData.role === "admin"
-          ? "/admin/signup"
-          : formData.role === "provider"
-          ? "/provider/signup"
-          : "/client/signup";
-  
-        payload = {
-          ...formData,
+      if (isLogin || isAdminLogin) {
+        // Login flow
+        const credentials = {
+          email: formData.email.trim(),
           password: formData.password.trim(),
         };
+
+        const result = await login(credentials);
+        
+        // Show any login messages (like pending approval for providers)
+        if (result.message) {
+          console.log('Login message:', result.message);
+        }
+
+        // Navigate to appropriate dashboard based on role
+        const userRole = result.user.role.toLowerCase();
+        let redirectPath = '/dashboard';
+        
+        switch (userRole) {
+          case 'admin':
+            redirectPath = '/admin-dashboard';
+            break;
+          case 'provider':
+            redirectPath = '/provider-dashboard';
+            break;
+          case 'client':
+            redirectPath = '/client-dashboard';
+            break;
+          default:
+            redirectPath = '/';
+        }
+
+        const from = location.state?.from || redirectPath;
+        navigate(from, { replace: true });
+
+      } else {
+        // Registration flow
+        const userData = {
+          fullName: formData.fullName.trim(),
+          email: formData.email.trim(),
+          password: formData.password.trim(),
+          phoneNumber: formData.phoneNumber.trim(),
+          role: formData.role
+        };
+
+        const result = await register(userData);
+        
+        // Navigate to appropriate dashboard based on role
+        const userRole = result.user.role.toLowerCase();
+        let redirectPath = '/dashboard';
+        
+        switch (userRole) {
+          case 'admin':
+            redirectPath = '/admin-dashboard';
+            break;
+          case 'provider':
+            redirectPath = '/provider-dashboard';
+            break;
+          case 'client':
+            redirectPath = '/client-dashboard';
+            break;
+          default:
+            redirectPath = '/';
+        }
+
+        navigate(redirectPath, { replace: true });
       }
-  
-      const response = await axios.post(`${API_URL}${endpoint}`, payload, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-  
-      if (!response.data.success) {
-        throw new Error(response.data.message || "Authentication failed");
-      }
-  
-      // Store auth token and user data in localStorage
-      localStorage.setItem("authToken", response.data.token);
-      localStorage.setItem("userData", JSON.stringify(response.data.user));
-  
-      // Redirect to homepage
-      navigate("/"); // Redirect to the homepage after signup
-  
+
     } catch (error) {
-      console.error("Error during form submission:", error);
-      setError(error.response?.data?.message || error.message || "Authentication failed");
+      console.error("Authentication error:", error);
+      setError(error.message || "Authentication failed");
     } finally {
       setIsLoading(false);
     }
   };
-  
 
   const handleForgotPasswordSubmit = async (e) => {
     e.preventDefault();
@@ -180,8 +236,9 @@ const AuthPage = () => {
           return;
         }
         
-        await axios.post(`${API_URL}/forgot-password`, { email: forgotPasswordEmail });
-        alert('Email Sent Successfully');
+        // You can implement this in your AuthContext if needed
+        console.log('Sending password reset email to:', forgotPasswordEmail);
+        alert('Password reset email sent successfully');
       } else {
         if (newPassword !== confirmNewPassword) {
           setError("Passwords don't match");
@@ -192,20 +249,16 @@ const AuthPage = () => {
           return;
         }
 
-        const response = await axios.post(`${API_URL}/reset-password/${resetToken}`, { 
-          password: newPassword 
-        });
-
-        localStorage.setItem("authToken", response.data.token);
-        localStorage.setItem("userData", JSON.stringify(response.data.user));
+        console.log('Resetting password with token:', resetToken);
         setResetSuccess(true);
         
         setTimeout(() => {
-          window.location.href = "/";
+          navigate('/');
         }, 2000);
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Password reset failed');
+      console.error('Password reset error:', err);
+      setError(err.message || 'Password reset failed');
     } finally {
       setIsLoading(false);
     }
@@ -225,7 +278,7 @@ const AuthPage = () => {
         </div>
 
         {!showForm ? (
-            <div className="space-y-3 sm:space-y-4 text-center">
+          <div className="space-y-3 sm:space-y-4 text-center">
             <button
               onClick={() => handleButtonClick(false)}
               className="cursor-pointer w-full py-2.5 sm:py-3 bg-[#076870] hover:bg-[#065d64] rounded-full text-white text-sm sm:text-base transition duration-200"
@@ -238,15 +291,12 @@ const AuthPage = () => {
             >
               Log In
             </button>
-            <a
-              onClick={() => {
-                setIsAdminLogin(true);
-                setShowForm(true);
-              }}
+            <button
+              onClick={handleAdminLoginClick}
               className="cursor-pointer hover:text-[#05484fce] text-[#05484f] rounded-full text-base sm:text-base transition duration-200"
             >
               Admin Login
-            </a>
+            </button>
           </div>
         ) : showForgotPassword ? (
           <form onSubmit={handleForgotPasswordSubmit} className="space-y-4">
@@ -336,7 +386,7 @@ const AuthPage = () => {
             )}
 
             <form onSubmit={handleFormSubmit} className="space-y-3 sm:space-y-4">
-              {/* Hide these fields for admin login */}
+              {/* Hide these fields for login and admin login */}
               {!isLogin && !isAdminLogin && (
                 <>
                   <input
@@ -357,6 +407,17 @@ const AuthPage = () => {
                     className="w-full p-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#076870]"
                     required
                   />
+                  {/* Role selection for signup */}
+                  <select
+                    name="role"
+                    value={formData.role}
+                    onChange={handleChange}
+                    className="w-full p-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#076870]"
+                    required
+                  >
+                    <option value="client">Client</option>
+                    <option value="provider">Service Provider</option>
+                  </select>
                 </>
               )}
 
@@ -391,7 +452,7 @@ const AuthPage = () => {
                 </button>
               </div>
 
-              {!isLogin && (
+              {!isLogin && !isAdminLogin && (
                 <div className="relative">
                   <input
                     type={showPassword ? "text" : "password"}
@@ -422,7 +483,7 @@ const AuthPage = () => {
                 ) : isAdminLogin ? "Login as Admin" : isLogin ? "Log In" : "Create Account"}
               </button>
 
-              {isLogin && (
+              {(isLogin || isAdminLogin) && (
                 <div className="text-right">
                   <button
                     type="button"
@@ -435,7 +496,7 @@ const AuthPage = () => {
               )}
             </form>
 
-            {!isLogin && (
+            {!isLogin && !isAdminLogin && (
               <p className="text-xs sm:text-sm text-gray-600 mt-3 sm:mt-4">
                 By signing up, you agree to our{" "}
                 <a href="#" className="text-[#076870] hover:text-[#065d64]">

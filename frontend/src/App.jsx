@@ -35,38 +35,6 @@ import ProviderDashboard from './pages/dashboard/provider/ProviderDashboard';
 import ProviderProfile from './pages/dashboard/provider/ProviderProfile';
 import ProviderSettings from './pages/dashboard/provider/ProviderSettings';
 
-// Dashboard router that redirects to the appropriate dashboard based on user role
-const DashboardRouter = () => {
-  const { user, isAuthenticated, isLoading } = useAuth();
-  
-  // Show loading while checking auth
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#076870]"></div>
-      </div>
-    );
-  }
-  
-  if (!isAuthenticated) {
-    // Not authenticated, redirect to login
-    return <Navigate to="/auth" replace />;
-  }
-
-  // Redirect based on role
-  switch (user?.role?.toLowerCase()) {
-    case 'admin':
-      return <Navigate to="/admin-dashboard" replace />;
-    case 'provider':
-      return <Navigate to="/provider-dashboard" replace />;
-    case 'client':
-      return <Navigate to="/client-dashboard" replace />;
-    default:
-      // If role is not recognized, redirect to home
-      return <Navigate to="/" replace />;
-  }
-};
-
 function App() {
   const location = useLocation();
   const isAuthPage = location.pathname === '/auth';
@@ -93,9 +61,6 @@ function App() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/become-tasker" element={<BecomeTasker />} />
-          
-          {/* Dashboard router - redirects to the appropriate dashboard */}
-          <Route path="/dashboard" element={<DashboardRouter />} />
           
           {/* Admin Dashboard Routes */}
           <Route path="/admin-dashboard" element={
