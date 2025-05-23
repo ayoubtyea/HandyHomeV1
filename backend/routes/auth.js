@@ -11,18 +11,21 @@ const {
 } = require('../controllers/authController');
 const { protect, authorize } = require('../middleware/auth');
 
-// Register routes
-router.post('/client/signup', registerClient);
-router.post('/provider/signup', registerProvider);
+// Register routes - Only client signup is public
+router.post('/signup', registerClient); // Public client signup
+router.post('/client/signup', registerClient); // Alternative client signup route
+
+// Provider and Admin registrations are protected
+router.post('/provider/signup', protect, authorize('admin'), registerProvider); // Only admins can create providers
 router.post('/admin/signup', protect, authorize('admin'), registerAdmin); // Only admins can create other admins
 
-// Login route
+// Login route - All users can login (client, provider, admin)
 router.post('/login', login);
 
-// Get current user
+// Get current user - Protected route
 router.get('/me', protect, getMe);
 
-// Password reset routes
+// Password reset routes - Public
 router.post('/forgot-password', forgotPassword);
 router.post('/reset-password/:resetToken', resetPassword);
 

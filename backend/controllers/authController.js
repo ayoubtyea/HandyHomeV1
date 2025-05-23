@@ -6,20 +6,31 @@ const nodemailer = require('nodemailer');
 
 // Helper function to generate JWT token
 const generateToken = (id) => {
+  if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET environment variable is not set');
+  }
   return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: '30d'
   });
 };
 
-// @desc    Register a new user (client)
-// @route   POST /api/auth/client/signup
+// @desc    Register a new user (client) - Public
+// @route   POST /api/auth/signup or /api/auth/client/signup
 // @access  Public
 exports.registerClient = async (req, res) => {
   try {
     const { fullName, email, password, phoneNumber } = req.body;
 
+    // Validate required fields
+    if (!fullName || !email || !password || !phoneNumber) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide all required fields'
+      });
+    }
+
     // Check if email already exists
-    const userExists = await User.findOne({ email });
+    const userExists = await User.findOne({ email: email.toLowerCase() });
     if (userExists) {
       return res.status(400).json({
         success: false,
@@ -27,13 +38,14 @@ exports.registerClient = async (req, res) => {
       });
     }
 
-    // Create user
+    // Create user with client role
     const user = await User.create({
       fullName,
-      email,
+      email: email.toLowerCase(),
       password,
       phoneNumber,
-      role: 'client'
+      role: 'client',
+      status: 'active' // Clients are automatically active
     });
 
     if (user) {
@@ -68,15 +80,23 @@ exports.registerClient = async (req, res) => {
   }
 };
 
-// @desc    Register a new provider
+// @desc    Register a new provider - Admin only
 // @route   POST /api/auth/provider/signup
-// @access  Public
+// @access  Private/Admin
 exports.registerProvider = async (req, res) => {
   try {
     const { fullName, email, password, phoneNumber } = req.body;
 
+    // Validate required fields
+    if (!fullName || !email || !password || !phoneNumber) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide all required fields'
+      });
+    }
+
     // Check if email already exists
-    const userExists = await User.findOne({ email });
+    const userExists = await User.findOne({ email: email.toLowerCase() });
     if (userExists) {
       return res.status(400).json({
         success: false,
@@ -87,7 +107,7 @@ exports.registerProvider = async (req, res) => {
     // Create user with provider role and pending status
     const user = await User.create({
       fullName,
-      email,
+      email: email.toLowerCase(),
       password,
       phoneNumber,
       role: 'provider',
@@ -126,15 +146,23 @@ exports.registerProvider = async (req, res) => {
   }
 };
 
-// @desc    Register a new admin
+// @desc    Register a new admin - Admin only
 // @route   POST /api/auth/admin/signup
 // @access  Private/Admin
 exports.registerAdmin = async (req, res) => {
   try {
     const { fullName, email, password, phoneNumber } = req.body;
 
+    // Validate required fields
+    if (!fullName || !email || !password || !phoneNumber) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide all required fields'
+      });
+    }
+
     // Check if email already exists
-    const userExists = await User.findOne({ email });
+    const userExists = await User.findOne({ email: email.toLowerCase() });
     if (userExists) {
       return res.status(400).json({
         success: false,
@@ -145,10 +173,11 @@ exports.registerAdmin = async (req, res) => {
     // Create admin user
     const user = await User.create({
       fullName,
-      email,
+      email: email.toLowerCase(),
       password,
       phoneNumber,
-      role: 'admin'
+      role: 'admin',
+      status: 'active'
     });
 
     if (user) {
@@ -183,15 +212,23 @@ exports.registerAdmin = async (req, res) => {
   }
 };
 
-// @desc    Login user
+// @desc    Login user (all roles)
 // @route   POST /api/auth/login
 // @access  Public
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    // Validate required fields
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide email and password'
+      });
+    }
+
     // Check if user exists
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) {
       return res.status(401).json({
         success: false,
@@ -208,11 +245,11 @@ exports.login = async (req, res) => {
       });
     }
 
-    // Check if user is active
-    if (user.status !== 'active' && user.role !== 'provider') {
+    // Check if user account is active (except for providers who can be pending)
+    if (user.status === 'suspended' || user.status === 'inactive') {
       return res.status(401).json({
         success: false,
-        message: 'Your account is not active. Please contact support.'
+        message: 'Your account has been suspended. Please contact support.'
       });
     }
 
@@ -254,9 +291,26 @@ exports.login = async (req, res) => {
 exports.getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('-password');
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
     res.status(200).json({
       success: true,
-      user
+      user: {
+        id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        phoneNumber: user.phoneNumber,
+        role: user.role,
+        status: user.status,
+        profilePhoto: user.profilePhoto,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt
+      }
     });
   } catch (error) {
     console.error('Get profile error:', error);
@@ -274,8 +328,15 @@ exports.forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
 
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide email address'
+      });
+    }
+
     // Find user by email
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -301,7 +362,7 @@ exports.forgotPassword = async (req, res) => {
 
     try {
       // Create a transporter
-      const transporter = nodemailer.createTransport({
+      const transporter = nodemailer.createTransporter({
         host: process.env.SMTP_HOST || 'smtp.mailtrap.io',
         port: process.env.SMTP_PORT || 2525,
         auth: {
