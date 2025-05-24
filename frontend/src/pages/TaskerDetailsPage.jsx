@@ -1,8 +1,9 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import ReadyToJoin from '../components/ReadyToJoin';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext'; // Import the auth context
 
 // Icons for skills
 const SkillIcons = {
@@ -50,9 +51,9 @@ const taskersData = [
       { name: 'Circuit Repair', price: 200, description: 'Diagnosis and repair of electrical circuits.' },
     ],
     clientReviews: [
-      { name: 'Alice', rating: "", comment: 'Great work, very professional!', date: '2023-10-01' },
-      { name: 'Bob', rating: "", comment: 'Fixed my issue quickly.', date: '2023-09-25' },
-      { name: 'Charlie', rating: "", comment: 'Highly recommended.', date: '2023-09-20' },
+      { name: 'Alice', rating: "5", comment: 'Great work, very professional!', date: '2023-10-01' },
+      { name: 'Bob', rating: "4", comment: 'Fixed my issue quickly.', date: '2023-09-25' },
+      { name: 'Charlie', rating: "5", comment: 'Highly recommended.', date: '2023-09-20' },
     ],
   },
   // Add more taskers here...
@@ -69,8 +70,8 @@ const exampleTopRatedTaskers = [
     image: 'https://cdn.prod.website-files.com/6641b18a77a92d76b329c2d5/6641b4ed7288e84197d4a6b7_plumbing-solutions.jpg',
     taskType: 'Electrician',
     reviews: 95,
-    milesAway: 5, // Example: 5 miles away
-    availableThisWeekend: true, // Example: Available this weekend
+    milesAway: 5,
+    availableThisWeekend: true,
   },
   {
     id: 3,
@@ -81,8 +82,8 @@ const exampleTopRatedTaskers = [
     image: 'https://cdn.prod.website-files.com/6641b18a77a92d76b329c2d5/6641b4c384a3010ab6bf5e72_carpentry-services.jpg',
     taskType: 'Electrician',
     reviews: 80,
-    milesAway: 10, // Example: 10 miles away
-    availableThisWeekend: false, // Example: Not available this weekend
+    milesAway: 10,
+    availableThisWeekend: false,
   },
   {
     id: 4,
@@ -93,38 +94,55 @@ const exampleTopRatedTaskers = [
     image: 'https://cdn.prod.website-files.com/6641b18a77a92d76b329c2d5/6641b4c384a3010ab6bf5e72_carpentry-services.jpg',
     taskType: 'Electrician',
     reviews: 110,
-    milesAway: 2, // Example: 2 miles away
-    availableThisWeekend: true, // Example: Available this weekend
+    milesAway: 2,
+    availableThisWeekend: true,
   },
 ];
 
 const TaskerDetailsPage = () => {
-  const { id } = useParams(); // Get the tasker ID from the URL
+  const { id } = useParams();
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth(); // Use the auth context
   const [showSignupPrompt, setShowSignupPrompt] = useState(false);
 
   const tasker = taskersData.find((tasker) => tasker.id === parseInt(id));
 
   if (!tasker) {
-    return <div>Tasker not found!</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">Tasker not found!</h2>
+          <Link to="/services" className="text-[#076870] hover:underline">
+            Back to Services
+          </Link>
+        </div>
+      </div>
+    );
   }
 
-  const handleBookService = () => {
-    const authToken = localStorage.getItem('authToken');
-    if (!authToken) {
+  const handleBookService = (e) => {
+    e.preventDefault(); // Prevent any default behavior
+    
+    if (!isAuthenticated) {
+      // Show the signup prompt
       setShowSignupPrompt(true);
+      
       // Auto-hide the prompt after 5 seconds
-      alert("Please Sign Up to book the Provider")
       setTimeout(() => setShowSignupPrompt(false), 5000);
-    } else {
-      navigate(`/book/${id}`);
+      
+      // Do NOT navigate - just return early
+      return;
     }
+    
+    // If user is authenticated, proceed with booking
+    navigate(`/book/${id}`);
   };
 
   const handleSignupClick = () => {
+    // Navigate to auth page with return path
     navigate('/auth', { state: { from: `/book/${id}` } });
   };
-  // Use hardcoded example top-rated taskers for now
+
   const topRatedTaskers = exampleTopRatedTaskers;
 
   return (
@@ -199,39 +217,54 @@ const TaskerDetailsPage = () => {
 
               {/* Buttons */}
               <div className="mt-6 flex flex-col gap-4">
-    <div className="flex gap-4">
-      <button
-        onClick={handleBookService}
-        alert={'please sign Up before Book the Provider'}
-       className="px-6 py-3 cursor-pointer bg-[#076870] text-white rounded-lg hover:bg-[#065f57] transition duration-300"
-      >
-        Book a Service
-      </button>
-      <button className="px-6 py-3 cursor-pointer bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition duration-300">
-        Message Provider
-      </button>
-    </div>
-    
-    {/* Signup Prompt */}
-    {showSignupPrompt && (
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -10 }}
-        transition={{ duration: 0.3 }}
-        className="bg-[#EAF4F4] p-3 rounded-lg border-l-4 border-[#076870]"
-      >
-        <p className="text-sm text-gray-700">
-          Please <span 
-            className="text-[#076870] font-medium cursor-pointer hover:underline"
-            onClick={handleSignupClick}
-          >
-            sign up
-          </span> or log in to book this service.
-        </p>
-      </motion.div>
-    )}
-  </div>
+                <div className="flex gap-4">
+                  <button
+                    onClick={handleBookService}
+                    className="px-6 py-3 cursor-pointer bg-[#076870] text-white rounded-lg hover:bg-[#065f57] transition duration-300"
+                  >
+                    Book a Service
+                  </button>
+                  <button className="px-6 py-3 cursor-pointer bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition duration-300">
+                    Message Provider
+                  </button>
+                </div>
+                
+                {/* Signup Prompt */}
+                {showSignupPrompt && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.3 }}
+                    className="bg-red-50 border-l-4 border-red-400 p-4 rounded-lg"
+                  >
+                    <div className="flex items-start">
+                      <div className="flex-shrink-0">
+                        <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                          <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <div className="ml-3">
+                        <h3 className="text-sm font-medium text-red-800">
+                          Authentication Required
+                        </h3>
+                        <div className="mt-2 text-sm text-red-700">
+                          <p>
+                            Please{' '}
+                            <button 
+                              className="font-medium underline hover:text-red-600"
+                              onClick={handleSignupClick}
+                            >
+                              sign up or log in
+                            </button>{' '}
+                            to book this service.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -343,8 +376,8 @@ const TaskerDetailsPage = () => {
                     <p className="font-semibold">{review.name}</p>
                     <p className="text-gray-600 text-sm">{review.date}</p>
                   </div>
-                  <p className="text-gray-700">⭐⭐⭐ {review.rating}</p>
-                  <p className="text-gray-700 mt-2">{review.comment}</p>
+                  <p className="text-gray-700">⭐⭐⭐⭐⭐ {review.rating}</p>
+                  <p className="text-gray-700 mt-2">"{review.comment}"</p>
                 </div>
               ))}
             </div>
@@ -368,15 +401,16 @@ const TaskerDetailsPage = () => {
                     />
                     <h3 className="text-xl font-semibold mt-2">{tasker.name}</h3>
                     <p className="text-[#076870]">{tasker.taskType}</p>
-                    { /* for Top Rated and Verified  */}
+                    
                     <div className="mt-4 mb-4 flex justify-center gap-4">
-              <button className="px-2 py-2 text-orange-400 rounded-full font-light bg-orange-100 hover:bg-orange-200 transition duration-300 cursor-pointer">
-                Top Rated
-              </button>
-              <button className="px-2 py-2 text-green-800 bg-green-100 rounded-full font-light hover:bg-green-200 cursor-pointer transition duration-300">
-                Verified
-              </button>
-            </div>
+                      <button className="px-2 py-2 text-orange-400 rounded-full font-light bg-orange-100 hover:bg-orange-200 transition duration-300 cursor-pointer">
+                        Top Rated
+                      </button>
+                      <button className="px-2 py-2 text-green-800 bg-green-100 rounded-full font-light hover:bg-green-200 cursor-pointer transition duration-300">
+                        Verified
+                      </button>
+                    </div>
+                    
                     <p className="text-gray-600">⭐ {tasker.rating} ({tasker.reviews} reviews)</p>
                     <p className="text-gray-600">${tasker.price} / hour</p>
 
@@ -390,11 +424,11 @@ const TaskerDetailsPage = () => {
 
                     {/* View Profile Button */}
                     <Link 
-  to={`/tasker-details/${tasker.id}`}
-  className="mt-4 px-4 py-2 bg-[#076870] text-white rounded-full hover:bg-[#065f57] transition duration-300 cursor-pointer block"
->
-  View Profile
-</Link>
+                      to={`/taskers/${tasker.id}`}
+                      className="mt-4 px-4 py-2 bg-[#076870] text-white rounded-full hover:bg-[#065f57] transition duration-300 cursor-pointer block"
+                    >
+                      View Profile
+                    </Link>
                   </div>
                 ))}
               </div>
@@ -404,7 +438,7 @@ const TaskerDetailsPage = () => {
       </section>
 
       {/* Join Us Section */}
-   <ReadyToJoin />
+      <ReadyToJoin />
     </>
   );
 };
