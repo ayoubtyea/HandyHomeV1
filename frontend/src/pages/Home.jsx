@@ -385,7 +385,7 @@ export default function HeroSection() {
         transition={{ duration: 0.5, delay: 0.2 }}
       >
         Get Comprehensive{' '}
-        <span className="text-[#076870] font-light block md:inline">
+        <span className="text-[#076870] font-semibold block md:inline">
           Home Solutions Services
         </span>
       </motion.h1>

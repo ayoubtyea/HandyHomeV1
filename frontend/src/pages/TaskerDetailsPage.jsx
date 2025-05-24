@@ -114,6 +114,7 @@ const TaskerDetailsPage = () => {
     if (!authToken) {
       setShowSignupPrompt(true);
       // Auto-hide the prompt after 5 seconds
+      alert("Please Sign Up to book the Provider")
       setTimeout(() => setShowSignupPrompt(false), 5000);
     } else {
       navigate(`/book/${id}`);
@@ -201,7 +202,8 @@ const TaskerDetailsPage = () => {
     <div className="flex gap-4">
       <button
         onClick={handleBookService}
-        className="px-6 py-3 cursor-pointer bg-[#076870] text-white rounded-lg hover:bg-[#065f57] transition duration-300"
+        alert={'please sign Up before Book the Provider'}
+       className="px-6 py-3 cursor-pointer bg-[#076870] text-white rounded-lg hover:bg-[#065f57] transition duration-300"
       >
         Book a Service
       </button>
