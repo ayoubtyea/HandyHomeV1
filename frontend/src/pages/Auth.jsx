@@ -26,7 +26,7 @@ const AuthPage = () => {
     phoneNumber: "",
     password: "",
     confirmPassword: "",
-    role: "client"
+    role: "client" // Always default to client for the main form
   });
 
   const [showPassword, setShowPassword] = useState(false);
@@ -63,7 +63,7 @@ const AuthPage = () => {
       phoneNumber: "",
       password: "",
       confirmPassword: "",
-      role: isLoginForm ? prev.role : "client"
+      role: "client" // Always client for main form
     }));
   };
 
@@ -80,7 +80,7 @@ const AuthPage = () => {
       phoneNumber: "",
       password: "",
       confirmPassword: "",
-      role: "admin"
+      role: "admin" // Only set to admin for admin login
     }));
   };
 
@@ -117,7 +117,7 @@ const AuthPage = () => {
       return false;
     }
     
-    // Additional signup validations
+    // Additional signup validations (only for client signup)
     if (!isLogin && !isAdminLogin) {
       if (!formData.fullName.trim()) {
         setError("Full name is required");
@@ -149,7 +149,7 @@ const AuthPage = () => {
 
     try {
       if (isLogin || isAdminLogin) {
-        // Login flow
+        // Login flow - works for all user types (client, provider, admin)
         const credentials = {
           email: formData.email.trim(),
           password: formData.password.trim(),
@@ -184,36 +184,19 @@ const AuthPage = () => {
         navigate(from, { replace: true });
 
       } else {
-        // Registration flow
+        // Registration flow - ONLY for clients
         const userData = {
           fullName: formData.fullName.trim(),
           email: formData.email.trim(),
           password: formData.password.trim(),
           phoneNumber: formData.phoneNumber.trim(),
-          role: formData.role
+          role: 'client' // Force client role
         };
 
         const result = await register(userData);
         
-        // Navigate to appropriate dashboard based on role
-        const userRole = result.user.role.toLowerCase();
-        let redirectPath = '/dashboard';
-        
-        switch (userRole) {
-          case 'admin':
-            redirectPath = '/admin-dashboard';
-            break;
-          case 'provider':
-            redirectPath = '/provider-dashboard';
-            break;
-          case 'client':
-            redirectPath = '/client-dashboard';
-            break;
-          default:
-            redirectPath = '/';
-        }
-
-        navigate(redirectPath, { replace: true });
+        // Navigate to client dashboard
+        navigate('/client-dashboard', { replace: true });
       }
 
     } catch (error) {
@@ -236,7 +219,6 @@ const AuthPage = () => {
           return;
         }
         
-        // You can implement this in your AuthContext if needed
         console.log('Sending password reset email to:', forgotPasswordEmail);
         alert('Password reset email sent successfully');
       } else {
@@ -283,7 +265,7 @@ const AuthPage = () => {
               onClick={() => handleButtonClick(false)}
               className="cursor-pointer w-full py-2.5 sm:py-3 bg-[#076870] hover:bg-[#065d64] rounded-full text-white text-sm sm:text-base transition duration-200"
             >
-              Sign Up
+              Sign Up as Client
             </button>
             <button
               onClick={() => handleButtonClick(true)}
@@ -300,7 +282,6 @@ const AuthPage = () => {
           </div>
         ) : showForgotPassword ? (
           <form onSubmit={handleForgotPasswordSubmit} className="space-y-4">
-            {/* Forgot Password form */}
             {!resetToken ? (
               <>
                 <h2 className="text-xl font-semibold text-gray-800 text-center">Reset Password</h2>
@@ -376,7 +357,7 @@ const AuthPage = () => {
         ) : (
           <>
             <h1 className="text-2xl sm:text-3xl font-light mb-3 sm:mb-4 text-center">
-              {isAdminLogin ? "Admin Login" : isLogin ? "Log In" : "Sign Up"}
+              {isAdminLogin ? "Admin Login" : isLogin ? "Log In" : "Client Sign Up"}
             </h1>
 
             {error && (
@@ -386,7 +367,7 @@ const AuthPage = () => {
             )}
 
             <form onSubmit={handleFormSubmit} className="space-y-3 sm:space-y-4">
-              {/* Hide these fields for login and admin login */}
+              {/* Only show these fields for CLIENT signup (not login or admin login) */}
               {!isLogin && !isAdminLogin && (
                 <>
                   <input
@@ -407,21 +388,11 @@ const AuthPage = () => {
                     className="w-full p-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#076870]"
                     required
                   />
-                  {/* Role selection for signup */}
-                  <select
-                    name="role"
-                    value={formData.role}
-                    onChange={handleChange}
-                    className="w-full p-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#076870]"
-                    required
-                  >
-                    <option value="client">Client</option>
-                    <option value="provider">Service Provider</option>
-                  </select>
+                  {/* No role selection - always client */}
                 </>
               )}
 
-              {/* Keep these fields for all login types */}
+              {/* Email and password for all forms */}
               <input
                 type="email"
                 name="email"
@@ -452,6 +423,7 @@ const AuthPage = () => {
                 </button>
               </div>
 
+              {/* Confirm password only for client signup */}
               {!isLogin && !isAdminLogin && (
                 <div className="relative">
                   <input
@@ -480,7 +452,7 @@ const AuthPage = () => {
                     </svg>
                     Processing...
                   </span>
-                ) : isAdminLogin ? "Login as Admin" : isLogin ? "Log In" : "Create Account"}
+                ) : isAdminLogin ? "Login as Admin" : isLogin ? "Log In" : "Create Client Account"}
               </button>
 
               {(isLogin || isAdminLogin) && (

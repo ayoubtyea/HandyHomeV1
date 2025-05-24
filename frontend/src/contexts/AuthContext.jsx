@@ -98,7 +98,7 @@ export const AuthProvider = ({ children }) => {
     loadUser();
   }, []);
 
-  // Login function
+  // Login function - works for all user types (client, provider, admin)
   const login = async (credentials) => {
     try {
       console.log('Attempting login with:', credentials);
@@ -139,15 +139,15 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Register function - Only for clients
+  // Register function - Only for clients through main form
   const register = async (userData) => {
     try {
-      console.log('Attempting registration with:', userData);
+      console.log('Attempting client registration with:', userData);
       
-      // Only allow client registration through public signup
+      // Force client role and use client signup endpoint
       const registrationData = {
         ...userData,
-        role: 'client' // Force client role for public signup
+        role: 'client' // Always force client role for main form registration
       };
       
       const response = await authAPI.post('/auth/signup', registrationData);
@@ -164,20 +164,88 @@ export const AuthProvider = ({ children }) => {
       setUser(response.data.user);
       setIsAuthenticated(true);
       
-      console.log('Registration successful, user set:', response.data.user);
+      console.log('Client registration successful, user set:', response.data.user);
       
       // Dispatch storage event for other components
       window.dispatchEvent(new Event('storage'));
       
       return response.data;
     } catch (error) {
-      console.error('Registration error:', error);
+      console.error('Client registration error:', error);
       
       let errorMessage = 'Registration failed';
       if (error.response) {
         errorMessage = error.response.data?.message || `Server error: ${error.response.status}`;
       } else if (error.request) {
         errorMessage = 'Network error - please check your connection and that the server is running';
+      } else {
+        errorMessage = error.message;
+      }
+      
+      throw new Error(errorMessage);
+    }
+  };
+
+  // Provider registration function - for the modal form
+  const registerProvider = async (providerData) => {
+    try {
+      console.log('Attempting provider registration...');
+      
+      // Create FormData for file uploads
+      const formData = new FormData();
+      
+      // Append all text fields
+      Object.keys(providerData).forEach(key => {
+        if (key !== 'idPhoto' && key !== 'selfiePhoto' && key !== 'profilePhoto') {
+          if (Array.isArray(providerData[key])) {
+            formData.append(key, JSON.stringify(providerData[key]));
+          } else {
+            formData.append(key, providerData[key]);
+          }
+        }
+      });
+      
+      // Append files
+      if (providerData.idPhoto) formData.append('idPhoto', providerData.idPhoto);
+      if (providerData.selfiePhoto) formData.append('selfiePhoto', providerData.selfiePhoto);
+      if (providerData.profilePhoto) formData.append('profilePhoto', providerData.profilePhoto);
+      
+      // Use different axios instance for file upload
+      const response = await axios({
+        method: 'post',
+        url: `${API_BASE_URL}/auth/provider/signup`, // Use provider signup endpoint
+        data: formData,
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        }
+      });
+      
+      if (!response.data.success) {
+        throw new Error(response.data.error || response.data.message || 'Provider registration failed');
+      }
+
+      // Store auth data
+      localStorage.setItem('authToken', response.data.token);
+      localStorage.setItem('userData', JSON.stringify(response.data.user));
+      
+      // Update state
+      setUser(response.data.user);
+      setIsAuthenticated(true);
+      
+      console.log('Provider registration successful:', response.data.user);
+      
+      // Dispatch storage event for other components
+      window.dispatchEvent(new Event('storage'));
+      
+      return response.data;
+    } catch (error) {
+      console.error('Provider registration error:', error);
+      
+      let errorMessage = 'Provider registration failed';
+      if (error.response) {
+        errorMessage = error.response.data?.message || `Server error: ${error.response.status}`;
+      } else if (error.request) {
+        errorMessage = 'Network error - please check your connection';
       } else {
         errorMessage = error.message;
       }
@@ -234,7 +302,8 @@ export const AuthProvider = ({ children }) => {
     isLoading,
     isAuthenticated,
     login,
-    register,
+    register, // Client registration only
+    registerProvider, // Provider registration for modal
     logout,
     updateUser,
     hasRole,

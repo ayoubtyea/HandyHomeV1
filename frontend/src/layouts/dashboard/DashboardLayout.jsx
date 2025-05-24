@@ -82,7 +82,7 @@ const DashboardLayout = ({ children, userAvatar = '' }) => {
           {sidebarOpen ? (
             <div className="flex items-center">
               <img src="https://i.postimg.cc/HLc2m50J/WHITH-1.png" alt="Logo" className="h-8 mr-2" />
-              <span className="text-lg font-semibold">{userRole.charAt(0).toUpperCase() + userRole.slice(1)}</span>
+              <span className="text-lg font-semibold hidden">{userRole.charAt(0).toUpperCase() + userRole.slice(1)}</span>
             </div>
           ) : (
             <img src="https://i.postimg.cc/HLc2m50J/WHITH-1.png" alt="Logo" className="h-8 mx-auto" />

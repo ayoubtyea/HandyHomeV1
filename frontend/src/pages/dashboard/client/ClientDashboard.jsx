@@ -228,7 +228,7 @@ const ClientDashboard = () => {
   const profileCompletion = calculateProfileCompletion();
 
   return (
-    <DashboardLayout>
+    <>
       {/* Top Section */}
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Main Content */}
@@ -451,7 +451,7 @@ const ClientDashboard = () => {
       </div>
 
       
-    </DashboardLayout>
+    </>
   );
 };
 
